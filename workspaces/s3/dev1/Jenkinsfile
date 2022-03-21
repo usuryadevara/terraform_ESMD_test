@@ -108,9 +108,9 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
         }
     }
 
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: 'tfplan.txt'
-    //     }
-    // }
+    post {
+        always {
+            archiveArtifacts artifacts: 'tfplan.txt'
+        }
+    }
 }
