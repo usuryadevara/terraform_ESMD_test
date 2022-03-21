@@ -32,47 +32,49 @@ pipeline {
                     script {
                     currentBuild.displayName = params.version
                     }
+                sh 'pwd && ls -lart'
                 sh """cd modules/s3/ && terraform init -backend-config ${params.ENVIRONMENT}-backend-config.tfvars"""
                 //sh 'terraform init -input=false'
                 sh """cd modules/s3/ && terraform workspace new ${params.environment} || terraform workspace select ${params.environment}"""
                 sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/rds/${params.ENVIRONMENT}/terraform.tfvars"""
                 //sh """terraform plan -input=false -out tfplan --var-file=environments/${params.environment}.tfvars"""
                 sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
+                sh "cat tfplan.txt"
                 }
             }
         }
 
-        stage('Approval') {
-            when {
-                not {
-                    equals expected: true, actual: params.autoApprove
-                }
-            }
+        // stage('Approval') {
+        //     when {
+        //         not {
+        //             equals expected: true, actual: params.autoApprove
+        //         }
+        //     }
 
-            steps {
-                container('docker') {
-                    script {
-                        def plan = readFile 'tfplan.txt'
-                        input message: "Do you want to apply the plan?",
-                            parameters: [text(name: 'Plan', description: 'Please review the plan.txt output', defaultValue: plan)]
-                    }
-                }
-            }
-        }
+        //     steps {
+        //         container('docker') {
+        //             script {
+        //                 def plan = readFile 'tfplan.txt'
+        //                 input message: "Do you want to apply the plan?",
+        //                     parameters: [text(name: 'Plan', description: 'Please review the plan.txt output', defaultValue: plan)]
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('tf-Apply') {
-            steps {
-                container('docker') {
-                    sh """terraform apply -var-file=../../workspaces/rds/val/terraform.tfvars"""
-                    sh "cd ../../../modules/s3/ && terraform apply -input=false tfplan"
-                }
-            }
-        }
+        // stage('tf-Apply') {
+        //     steps {
+        //         container('docker') {
+        //             sh """terraform apply -var-file=../../workspaces/rds/val/terraform.tfvars"""
+        //             sh "cd ../../../modules/s3/ && terraform apply -input=false tfplan"
+        //         }
+        //     }
+        // }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'tfplan.txt'
-        }
-    }
+    // post {
+    //     always {
+    //         archiveArtifacts artifacts: 'tfplan.txt'
+    //     }
+    // }
 }
