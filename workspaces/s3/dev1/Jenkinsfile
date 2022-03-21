@@ -35,7 +35,7 @@ pipeline {
 
 
             script {
-              if ("${params.ENVIRONMENT}" == 'dev') {
+              if ("${params.ENVIRONMENT}" == 'dev1') {
                   env.ACCOUNT_ID = "818345503029"
                   env.ECS_CLUSTER_NAME = "dev-esmd-az"
               } else if ("${params.ENVIRONMENT}" == 'val') {
