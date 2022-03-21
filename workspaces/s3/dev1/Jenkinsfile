@@ -101,8 +101,10 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
         stage('tf-Apply') {
             steps {
                 container('docker') {
+                    ansiColor('xterm') {
                     sh """cd modules/s3/ && terraform apply -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
                     sh "cd modules/s3/ && terraform apply -input=false tfplan"
+                    }
                 }
             }
         }
