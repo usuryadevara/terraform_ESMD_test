@@ -1,0 +1,78 @@
+pipeline {
+  agent {
+    kubernetes {
+      yamlFile 'kubernetes_docker.yml'
+    }
+  }
+
+    options { //Defining the options for the Job
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+        timeout(time:30, unit: 'MINUTES')
+        parallelsAlwaysFailFast()
+    } 
+
+    parameters {
+        choice(choices: ' \ndev1\nval1',description: 'Environment',name: 'ENVIRONMENT')
+        //string(name: 'environment', defaultValue: 'dev', description: 'Workspace/environment file to use for deployment')
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Want to auto run apply after Generating plan?')
+    }
+    
+    environment {
+        /*If TF_IN_AUTOMATION is set to any non-empty value, Terraform adjusts its output to avoid suggesting specific commands to run next. 
+        This can make the output more consistent and less confusing in workflows where users don't directly execute Terraform commands, 
+        like in CI systems or other wrapping applications. This is a purely cosmetic change to Terraform's human-readable output, 
+        and the exact output differences can change between minor Terraform versions.*/
+        TF_IN_AUTOMATION      = '1'
+    }
+
+    stages {
+        stage('tf-init & tf-Plan') {
+            steps {
+                container('docker') {
+                    script {
+                    currentBuild.displayName = params.version
+                    }
+                sh """cd ../../../modules/s3/ && terraform init -backend-config ${params.ENVIRONMENT}-backend-config.tfvars"""
+                //sh 'terraform init -input=false'
+                sh """cd ../../../modules/s3/ && terraform workspace new ${params.environment} || terraform workspace select ${params.environment}"""
+                sh """cd ../../../modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/rds/${params.ENVIRONMENT}/terraform.tfvars"""
+                //sh """terraform plan -input=false -out tfplan --var-file=environments/${params.environment}.tfvars"""
+                sh """cd ../../../modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
+                }
+            }
+        }
+
+        stage('Approval') {
+            when {
+                not {
+                    equals expected: true, actual: params.autoApprove
+                }
+            }
+
+            steps {
+                container('docker') {
+                    script {
+                        def plan = readFile 'tfplan.txt'
+                        input message: "Do you want to apply the plan?",
+                            parameters: [text(name: 'Plan', description: 'Please review the plan.txt output', defaultValue: plan)]
+                    }
+                }
+            }
+        }
+
+        stage('tf-Apply') {
+            steps {
+                container('docker') {
+                    sh """terraform apply -var-file=../../workspaces/rds/val/terraform.tfvars"""
+                    sh "cd ../../../modules/s3/ && terraform apply -input=false tfplan"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'tfplan.txt'
+        }
+    }
+}

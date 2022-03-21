@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+spec:
+  serviceAccountName: "jenkins-role"
+  containers:
+  - name: docker
+    image: artifactory.cloud.cms.gov:443/esmd-devsecops/devsecops-img:v1
+    command: ['cat']
+    tty: true
+    privileged: true
+    volumeMounts:
+    - name: dockersock
+      mountPath: /var/run/docker.sock
+  imagePullSecrets:
+  - name: regcred
+  volumes:
+  - name: dockersock
+    hostPath:
+      path: /var/run/docker.sock
