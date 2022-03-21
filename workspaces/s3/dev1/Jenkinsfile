@@ -33,7 +33,7 @@ pipeline {
                     currentBuild.displayName = params.version
                     }
                 sh 'pwd && ls -lart'
-                sh """cd modules/s3/ && terraform init -backend-config ${params.ENVIRONMENT}-backend-config.tfvars"""
+                sh """cd modules/s3/ && terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}-backend-config.tfvars"""
                 //sh 'terraform init -input=false'
                 sh """cd modules/s3/ && terraform workspace new ${params.environment} || terraform workspace select ${params.environment}"""
                 sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/rds/${params.ENVIRONMENT}/terraform.tfvars"""
