@@ -15,18 +15,13 @@ data "aws_caller_identity" "current" {
 }
 
 locals {
-  resource_prefix   = "tf"
-  workspace         = "${terraform.workspace}"
-  resource_name     = "${local.resource_prefix}-${var.product_line}-${var.product_component}-${local.workspace}"
   s3buckettestbucket  = "${var.env_type}-uns-testbucket818345503029"
-  tags = {
-    EnvType            = "${var.env_type}"
-    EnvName            = "${local.workspace}"
-    ProductLine        = "${var.product_line}"
-    ProductComponent   = "${var.product_component}"
-    Provisioner        = "${var.provisioner}"
-    OwnerContact       = "${var.owner_contact}"
-    MaintenanceContact = "${var.maintenance_contact}"
+  common_tags = {
+    EnvType            = var.env_type
+    MaintenanceContact = var.maintenance_contact
+    ProductLine        = var.product_line
+    Provisioner        = var.provisioner
+    OwnerContact       = var.owner_contact
   }
 }
 
@@ -34,7 +29,19 @@ locals {
 resource "aws_s3_bucket" "testbucket" {
   bucket = local.s3buckettestbucket
   acl    = "private"
-  tags = local.tags
+    server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = merge(
+    {
+      Name = "tf-${var.env_type}-${var.product_line}-audit_trans_columns"
+    },
+    local.common_tags,
+    )
 }
 
 resource "aws_s3_bucket_public_access_block" "testbucket" {

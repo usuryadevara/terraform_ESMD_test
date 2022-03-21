@@ -70,11 +70,10 @@ aws sts get-caller-identity
 ansiColor('xterm') {
 sh """cd modules/s3/ && terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars"""
 //sh 'terraform init -input=false'
-sh """cd modules/s3/ && terraform workspace new ${params.environment} || terraform workspace select ${params.environment}"""
+sh """cd modules/s3/ && terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}"""
 sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
 //sh """terraform plan -input=false -out tfplan --var-file=environments/${params.environment}.tfvars"""
 sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
-sh "cat modules/s3/tfplan.txt"
 }
                     }
                 }
@@ -91,7 +90,7 @@ sh "cat modules/s3/tfplan.txt"
             steps {
                 container('docker') {
                     script {
-                        def plan = readFile 'tfplan.txt'
+                        def plan = readFile 'modules/s3/tfplan.txt'
                         input message: "Do you want to apply the plan?",
                             parameters: [text(name: 'Plan', description: 'Please review the plan.txt output', defaultValue: plan)]
                     }
@@ -102,8 +101,8 @@ sh "cat modules/s3/tfplan.txt"
         stage('tf-Apply') {
             steps {
                 container('docker') {
-                    sh """terraform apply -var-file=../../workspaces/rds/val/terraform.tfvars"""
-                    sh "cd ../../../modules/s3/ && terraform apply -input=false tfplan"
+                    sh """cd modules/s3/ && terraform apply -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+                    sh "cd modules/s3/ && terraform apply -input=false tfplan"
                 }
             }
         }
