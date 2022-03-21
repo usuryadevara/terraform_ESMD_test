@@ -30,11 +30,7 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                    currentBuild.displayName = params.version
-                    }
-
-
-            script {
+            currentBuild.displayName = params.version
               if ("${params.ENVIRONMENT}" == 'dev1') {
                   env.ACCOUNT_ID = "818345503029"
                   env.ECS_CLUSTER_NAME = "dev-esmd-az"
@@ -45,7 +41,7 @@ pipeline {
               } else {
                   echo 'Input correct AWS account'
               }
-              sh '''
+sh '''
 # Generate the credentials file
 echo Runnign in AWS Account $ACCOUNT_ID
 aws sts assume-role \
@@ -78,6 +74,7 @@ sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/s3
 //sh """terraform plan -input=false -out tfplan --var-file=environments/${params.environment}.tfvars"""
 sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
 sh "cat tfplan.txt"
+                    }
                 }
             }
         }
