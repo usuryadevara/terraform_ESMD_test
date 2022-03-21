@@ -1,6 +1,6 @@
 terraform {
   required_providers { aws = "~> 3.60" }
-  required_version = "0.15.5"
+  required_version = "0.15.4"
   backend "s3" {
     key    = "service_layer/terraform.tfstate"
     region = "us-east-1"
