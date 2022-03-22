@@ -191,9 +191,9 @@ aws sts get-caller-identity
         }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
-        }
-    }
+    // post {
+    //     always {
+    //         archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
+    //     }
+    // }
 }
