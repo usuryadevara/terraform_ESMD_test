@@ -14,7 +14,7 @@ pipeline {
     parameters {
         choice(choices: ' \ndev1\nval1',description: 'Environment',name: 'ENVIRONMENT')
         choice(choices: ['plan', 'apply', 'show', 'preview-destroy', 'destroy'],description: 'Terraform action to apply',name: 'action')
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Want to auto run apply after Generating plan?')
+        //booleanParam(name: 'autoApprove', defaultValue: false, description: 'Want to auto run apply after Generating plan?')
         //booleanParam(name: 'destroy', defaultValue: false, description: 'Destroy Terraform build?')
     }
     
