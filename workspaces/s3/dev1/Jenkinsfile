@@ -68,10 +68,17 @@ aws sts get-caller-identity
 #aws s3 ls
 '''
 ansiColor('xterm') {
-sh """cd modules/s3/ && terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars"""
-sh """cd modules/s3/ && terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}"""
-sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
-sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
+sh ("""
+    cd modules/s3/
+    terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars
+    terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}
+    terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+    terraform show -no-color tfplan > tfplan.txt
+""")
+//sh """cd modules/s3/ && terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars"""
+//sh """cd modules/s3/ && terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}"""
+//sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+//sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
 }
                     }
                 }
@@ -100,7 +107,10 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
             steps {
                 container('docker') {
                     ansiColor('xterm') {
-                    sh "cd modules/s3/ && terraform apply -input=false tfplan"
+                    sh ("""
+                        cd modules/s3/
+                        terraform apply -input=false tfplan
+                    """)
                     }
                 }
             }
