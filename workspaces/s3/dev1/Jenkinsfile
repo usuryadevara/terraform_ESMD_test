@@ -93,76 +93,107 @@ aws sts get-caller-identity
             }
         }
 
-        stage('tf-Plan') {
+        stage('tf-plan') {
             when {
                 expression { params.action == 'plan' || params.action == 'apply' }
             }
             steps {
                 container('docker') {
-                sh """terraform plan -no-color -input=false -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+                ansiColor('xterm') {
+                sh ("""
+                cd modules/s3/
+                terraform plan -no-color -input=false -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+                """)
+                }
                 }
             }
         }
 
-        // stage('Approval') {
-        //     when {
-        //         not {
-        //             equals expected: true, actual: params.autoApprove
-        //         }
-        //         not {
-        //             equals expected: true, actual: params.destroy
-        //         }
-        //     }
-        //     steps {
-        //         container('docker') {
-        //             script {
-        //             def plan = readFile 'modules/s3/tfplan.txt'
-        //             input message: "Do you want to apply the plan?",
-        //             parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-        //             }
-        //         }
-        //     }
-        // }
+        stage('tf-approval') {
+            when {
+                expression { params.action == 'apply'}
+            }
+            steps {
+                container('docker') {
+                    sh ("""
+                    cd modules/s3/
+                    terraform show -no-color tfplan > tfplan.txt
+                    """)
+                    script {
+                    def plan = readFile 'modules/s3/tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    }
+                }
+            }
+        }
 
-        // stage('tf-Apply') {
-        //     when {
-        //         not {
-        //             equals expected: true, actual: params.destroy
-        //         }
-        //     }
-        //     steps {
-        //         container('docker') {
-        //             ansiColor('xterm') {
-        //             sh ("""
-        //                 cd modules/s3/
-        //                 terraform apply -input=false tfplan
-        //             """)
-        //             }
-        //         }
-        //     }
-        // }
+        stage('tf-apply') {
+            when {
+                expression { params.action == 'apply' }
+            }
+            steps {
+                container('docker') {
+                    ansiColor('xterm') {
+                    sh ("""
+                        cd modules/s3/
+                        terraform apply -input=false tfplan
+                    """)
+                    }
+                }
+            }
+        }
 
-        // stage('tf-Destroy') {
-        //     when {
-        //         equals expected: true, actual: params.destroy
-        //     }
+        stage('tf-show') {
+            when {
+                expression { params.action == 'show' }
+            }
+            steps {
+                container('docker') {
+                sh ("""
+                cd modules/s3/
+                terraform show -no-color
+                """)
+                }
+            }
+        }
+        
+        stage('preview-destroy') {
+            when {
+                expression { params.action == 'preview-destroy' || params.action == 'destroy'}
+            }
+            steps {
+                container('docker') {
+                sh ("""
+                cd modules/s3/
+                terraform plan -no-color -destroy -out=tfplan --var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+                terraform show -no-color tfplan > tfplan.txt
+                """)
+                }
+            }
+        }
 
-        //     steps {
-        //         container('docker') {
-        //             ansiColor('xterm') {
-        //             sh ("""
-        //                 cd modules/s3/
-        //                 terraform destroy --auto-approve
-        //             """)
-        //             }
-        //         }
-        //     }
-        // }
+        stage('tf-destroy') {
+            when {
+                expression { params.action == 'destroy' }
+            }
+            steps {
+                script {
+                    container('docker') {
+                    sh 'cd modules/s3/'
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Delete the stack?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    }
+                }
+                sh """terraform destroy -no-color -force --var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+            }
+        }
     }
 
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
-    //     }
-    // }
+    post {
+        always {
+            archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
+        }
+    }
 }
