@@ -69,10 +69,8 @@ aws sts get-caller-identity
 '''
 ansiColor('xterm') {
 sh """cd modules/s3/ && terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars"""
-//sh 'terraform init -input=false'
 sh """cd modules/s3/ && terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}"""
 sh """cd modules/s3/ && terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
-//sh """terraform plan -input=false -out tfplan --var-file=environments/${params.environment}.tfvars"""
 sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
 }
                     }
@@ -90,9 +88,9 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
             steps {
                 container('docker') {
                     script {
-                        def plan = readFile 'modules/s3/tfplan.txt'
-                        input message: "Do you want to apply the plan?",
-                            parameters: [text(name: 'Plan', description: 'Please review the plan.txt output', defaultValue: plan)]
+                    def plan = readFile 'modules/s3/tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                     }
                 }
             }
@@ -102,7 +100,7 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
             steps {
                 container('docker') {
                     ansiColor('xterm') {
-                    sh """cd modules/s3/ && terraform apply -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+                    //sh """cd modules/s3/ && terraform apply -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
                     sh "cd modules/s3/ && terraform apply -input=false tfplan"
                     }
                 }
