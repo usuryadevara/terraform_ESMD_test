@@ -123,6 +123,7 @@ aws sts get-caller-identity
                     def plan = readFile 'modules/s3/tfplan.txt'
                     input message: "Do you want to apply the plan?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
                     }
                 }
             }
@@ -187,6 +188,7 @@ aws sts get-caller-identity
                     }
                 }
                 sh """terraform destroy -no-color -force --var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
+                archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
             }
         }
     }
