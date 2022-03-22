@@ -100,7 +100,6 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
             steps {
                 container('docker') {
                     ansiColor('xterm') {
-                    //sh """cd modules/s3/ && terraform apply -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars"""
                     sh "cd modules/s3/ && terraform apply -input=false tfplan"
                     }
                 }
@@ -110,7 +109,7 @@ sh """cd modules/s3/ && terraform show -no-color tfplan > tfplan.txt"""
 
     post {
         always {
-            archiveArtifacts artifacts: 'tfplan.txt'
+            archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
         }
     }
 }
