@@ -198,7 +198,8 @@ aws sts get-caller-identity
             emailext(
                 from: "${FROM_EMAILIDS}",
                 subject: "[Jenkins] Success: Job '${env.JOB_NAME}'",
-                attachLog: true, attachmentsPattern: "${MODULES_PATH}/tfplan.txt",
+                //attachLog: true, attachmentsPattern: "${MODULES_PATH}/tfplan.txt", /*Use this Line to see the build log as well*/
+                attachmentsPattern: "${MODULES_PATH}/tfplan.txt", /*only archiveArtifacts for what ever stages it's enabled for*/
                 body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
                 to: "${TO_EMAILIDS}"
             )
