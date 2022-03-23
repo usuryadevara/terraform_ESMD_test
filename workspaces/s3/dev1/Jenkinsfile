@@ -24,6 +24,8 @@ pipeline {
         like in CI systems or other wrapping applications. This is a purely cosmetic change to Terraform's human-readable output, 
         and the exact output differences can change between minor Terraform versions.*/
         TF_IN_AUTOMATION      = '1'
+        MODULES_PATH = 'modules/s3'
+        WORKSPACE_PATH = 'workspaces/s3'
     }
 
     stages {
@@ -70,13 +72,13 @@ aws sts get-caller-identity
 '''
     ansiColor('xterm') {
         sh ("""
-            cd modules/s3/
-            terraform init -backend-config ../../workspaces/s3/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars
+            cd ${MODULES_PATH}/
+            terraform init -backend-config ../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/${params.ENVIRONMENT}-backend-config.tfvars
             terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}
         """)
     }
             //terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}
-            //terraform plan -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+            //terraform plan -out tfplan -var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars
             //terraform show -no-color tfplan > tfplan.txt
                     }
                 }
@@ -101,8 +103,8 @@ aws sts get-caller-identity
                 container('docker') {
                 ansiColor('xterm') {
                 sh ("""
-                cd modules/s3/
-                terraform plan -no-color -input=false -out tfplan -var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+                cd ${MODULES_PATH}/
+                terraform plan -no-color -input=false -out tfplan -var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars
                 """)
                 }
                 }
@@ -116,14 +118,14 @@ aws sts get-caller-identity
             steps {
                 container('docker') {
                     sh ("""
-                    cd modules/s3/
+                    cd ${MODULES_PATH}/
                     terraform show -no-color tfplan > tfplan.txt
                     """)
                     script {
-                    def plan = readFile 'modules/s3/tfplan.txt'
+                    def plan = readFile '${MODULES_PATH}/tfplan.txt'
                     input message: "Do you want to apply the plan?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-                    archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
+                    archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
                     }
                 }
             }
@@ -137,7 +139,7 @@ aws sts get-caller-identity
                 container('docker') {
                     ansiColor('xterm') {
                     sh ("""
-                        cd modules/s3/
+                        cd ${MODULES_PATH}/
                         terraform apply -input=false tfplan
                     """)
                     }
@@ -152,7 +154,7 @@ aws sts get-caller-identity
             steps {
                 container('docker') {
                 sh ("""
-                cd modules/s3/
+                cd ${MODULES_PATH}/
                 terraform show -no-color
                 """)
                 }
@@ -166,8 +168,8 @@ aws sts get-caller-identity
             steps {
                 container('docker') {
                 sh ("""
-                cd modules/s3/
-                terraform plan -no-color -destroy -out=tfplan --var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars
+                cd ${MODULES_PATH}/
+                terraform plan -no-color -destroy -out=tfplan --var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars
                 terraform show -no-color tfplan > tfplan.txt
                 """)
                 }
@@ -181,14 +183,14 @@ aws sts get-caller-identity
             steps {
                 script {
                     container('docker') {
-                    def plan = readFile 'modules/s3/tfplan.txt'
+                    def plan = readFile '${MODULES_PATH}/tfplan.txt'
                     input message: "Delete the stack?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                     sh ("""
-                    cd modules/s3/
-                    terraform destroy -no-color --var-file=../../workspaces/s3/${params.ENVIRONMENT}/terraform.tfvars --auto-approve
+                    cd ${MODULES_PATH}/
+                    terraform destroy -no-color --var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars --auto-approve
                     """)
-                    archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
+                    archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
                     }
                 }
             }
@@ -197,7 +199,7 @@ aws sts get-caller-identity
 
     // post {
     //     always {
-    //         archiveArtifacts artifacts: 'modules/s3/tfplan.txt'
+    //         archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
     //     }
     // }
 }
