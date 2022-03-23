@@ -200,7 +200,7 @@ aws sts get-caller-identity
                 subject: "[Jenkins] Success: Job '${env.JOB_NAME}'",
                 //attachLog: true, attachmentsPattern: "${MODULES_PATH}/tfplan.txt", /*Use this Line to see the build log as well*/
                 attachmentsPattern: "${MODULES_PATH}/tfplan.txt", /*only archiveArtifacts for what ever stages it's enabled for*/
-                body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}' \n ${params.ENVIRONMENT} \n ${params.action} ",
+                body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}' \n TF_Environment: ${params.ENVIRONMENT} \n TF_Action: ${params.action}",
                 to: "${TO_EMAILIDS}"
             )
             }
@@ -209,7 +209,7 @@ aws sts get-caller-identity
         emailext(
             from: "${FROM_EMAILIDS}",
             subject: "[Jenkins] Failure: Job '${env.JOB_NAME}'",
-            body: "Build Failure Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
+            body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}' \n TF_Environment: ${params.ENVIRONMENT} \n TF_Action: ${params.action}",
             to: "${TO_EMAILIDS}"
         )
         }
