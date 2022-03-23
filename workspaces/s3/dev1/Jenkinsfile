@@ -21,6 +21,8 @@ pipeline {
         TF_IN_AUTOMATION      = '1' 
         MODULES_PATH = 'modules/s3'
         WORKSPACE_PATH = 'workspaces/s3'
+        TO_EMAILIDS  = 'usuryadevara@unissant.com'
+        FROM_EMAILIDS = 'noreply-jenkins@cms.hhs.gov'
     }
 
     stages {
@@ -193,20 +195,18 @@ aws sts get-caller-identity
         success {
         /* Email Extension Plugin*/
         emailext(
-            //recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: "RequesterRecipientProvider"]],
-            from: 'noreply-jenkins@cms.hhs.gov',
-            subject: 'Success',
-            body: 'Build Successful',
-            to: 'usuryadevara@unissant.com'
+            from: "${FROM_EMAILIDS}",
+            subject: "[Jenkins] Success: Job '${env.JOB_NAME}'",
+            body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
+            to: "${TO_EMAILIDS}"
         )
         }
         failure {
         emailext(
-            //recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: "RequesterRecipientProvider"]],
-            from: 'noreply-jenkins@cms.hhs.gov',
-            subject: 'failure',
-            body: 'Build failed',
-            to: 'usuryadevara@unissant.com'
+            from: "${FROM_EMAILIDS}",
+            subject: "[Jenkins] Failure: Job '${env.JOB_NAME}'",
+            body: "Build Failure Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
+            to: "${TO_EMAILIDS}"
         )
         }
     }
