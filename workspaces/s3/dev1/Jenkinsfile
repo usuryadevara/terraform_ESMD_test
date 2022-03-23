@@ -122,10 +122,10 @@ aws sts get-caller-identity
                     terraform show -no-color tfplan > tfplan.txt
                     """)
                     script {
-                    def plan = readFile '${MODULES_PATH}/tfplan.txt'
+                    def plan = readFile "${MODULES_PATH}/tfplan.txt"
                     input message: "Do you want to apply the plan?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-                    archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
+                    archiveArtifacts artifacts: "${MODULES_PATH}/tfplan.txt"
                     }
                 }
             }
@@ -183,14 +183,14 @@ aws sts get-caller-identity
             steps {
                 script {
                     container('docker') {
-                    def plan = readFile '${MODULES_PATH}/tfplan.txt'
+                    def plan = readFile "${MODULES_PATH}/tfplan.txt"
                     input message: "Delete the stack?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                     sh ("""
                     cd ${MODULES_PATH}/
                     terraform destroy -no-color --var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars --auto-approve
                     """)
-                    archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
+                    archiveArtifacts artifacts: "${MODULES_PATH}/tfplan.txt"
                     }
                 }
             }
