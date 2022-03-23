@@ -14,16 +14,11 @@ pipeline {
     parameters {
         choice(choices: ' \ndev1\nval1',description: 'Environment',name: 'ENVIRONMENT')
         choice(choices: ['plan', 'apply', 'show', 'preview-destroy', 'destroy'],description: 'Terraform action to apply',name: 'action')
-        //booleanParam(name: 'autoApprove', defaultValue: false, description: 'Want to auto run apply after Generating plan?')
-        //booleanParam(name: 'destroy', defaultValue: false, description: 'Destroy Terraform build?')
     }
     
     environment {
-        /*If TF_IN_AUTOMATION is set to any non-empty value, Terraform adjusts its output to avoid suggesting specific commands to run next. 
-        This can make the output more consistent and less confusing in workflows where users don't directly execute Terraform commands, 
-        like in CI systems or other wrapping applications. This is a purely cosmetic change to Terraform's human-readable output, 
-        and the exact output differences can change between minor Terraform versions.*/
-        TF_IN_AUTOMATION      = '1'
+        /*This is a purely cosmetic change to Terraform’s human-readable output: Refer here: https://www.terraform.io/cli/config/environment-variables */
+        TF_IN_AUTOMATION      = '1' 
         MODULES_PATH = 'modules/s3'
         WORKSPACE_PATH = 'workspaces/s3'
     }
@@ -77,9 +72,6 @@ aws sts get-caller-identity
             terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}
         """)
     }
-            //terraform workspace new ${params.ENVIRONMENT} || terraform workspace select ${params.ENVIRONMENT}
-            //terraform plan -out tfplan -var-file=../../${WORKSPACE_PATH}/${params.ENVIRONMENT}/terraform.tfvars
-            //terraform show -no-color tfplan > tfplan.txt
                     }
                 }
             }
@@ -197,9 +189,25 @@ aws sts get-caller-identity
         }
     }
 
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: '${MODULES_PATH}/tfplan.txt'
-    //     }
-    // }
+    post {
+        success {
+        /* Email Extension Plugin*/
+        emailext(
+            //recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: "RequesterRecipientProvider"]],
+            from: 'noreply-jenkins@cms.hhs.gov',
+            subject: 'Success',
+            body: 'Build Successful',
+            to: 'usuryadevara@unissant.com'
+        )
+        }
+        failure {
+        emailext(
+            //recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: "RequesterRecipientProvider"]],
+            from: 'noreply-jenkins@cms.hhs.gov',
+            subject: 'failure',
+            body: 'Build failed',
+            to: 'usuryadevara@unissant.com'
+        )
+        }
+    }
 }
