@@ -194,12 +194,15 @@ aws sts get-caller-identity
     post {
         success {
         /* Email Extension Plugin*/
-        emailext(
-            from: "${FROM_EMAILIDS}",
-            subject: "[Jenkins] Success: Job '${env.JOB_NAME}'",
-            body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
-            to: "${TO_EMAILIDS}"
-        )
+            container('docker') {
+            emailext(
+                from: "${FROM_EMAILIDS}",
+                subject: "[Jenkins] Success: Job '${env.JOB_NAME}'",
+                attachLog: true, attachmentsPattern: "${MODULES_PATH}/tfplan.txt",
+                body: "Build Successful Job: ${env.JOB_NAME} \n\n Build Details: \n Build# [${env.BUILD_NUMBER}] \n Build_URL: ${env.BUILD_URL} \n Branch_name: ${GIT_BRANCH}'",
+                to: "${TO_EMAILIDS}"
+            )
+            }
         }
         failure {
         emailext(
